@@ -23,8 +23,11 @@ const config = {
       gitEagerVcs: false,
     },
   },
-  url: 'https://simphant.example.com',
-  baseUrl: '/',
+  url: 'https://valeriy-sh79.github.io',
+  baseUrl: '/simphant-docs/',
+  organizationName: 'valeriy-sh79',
+  projectName: 'simphant-docs',
+  deploymentBranch: 'gh-pages',
   trailingSlash: false,
   onBrokenLinks: 'throw',
   markdown: {
