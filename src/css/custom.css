@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --ifm-color-primary: #12736a;
+  --ifm-color-primary-dark: #10675f;
+  --ifm-color-primary-darker: #0f6058;
+  --ifm-color-primary-darkest: #0c4f48;
+  --ifm-color-primary-light: #147f75;
+  --ifm-color-primary-lighter: #15867c;
+  --ifm-color-primary-lightest: #1aa195;
+  --ifm-background-color: #f5f7f4;
+  --ifm-background-surface-color: #ffffff;
+  --ifm-navbar-background-color: rgba(245, 247, 244, 0.92);
+  --ifm-footer-background-color: #10231f;
+  --ifm-footer-color: #dbe7e2;
+  --ifm-footer-link-color: #f4fbf8;
+  --ifm-link-color: #0d6b62;
+  --ifm-menu-color-active: #0d6b62;
+  --ifm-toc-border-color: #d5e0da;
+  --ifm-font-family-base: 'Manrope', 'Segoe UI', sans-serif;
+  --ifm-heading-font-family: 'IBM Plex Serif', Georgia, serif;
+  --ifm-code-font-size: 92%;
+  --ifm-global-radius: 14px;
+  --docusaurus-highlighted-code-line-bg: rgba(18, 115, 106, 0.08);
+}
+
+html {
+  background:
+    radial-gradient(circle at top right, rgba(26, 161, 149, 0.11), transparent 24%),
+    linear-gradient(180deg, #f7faf8 0%, #f2f5f2 100%);
+}
+
+body {
+  font-feature-settings: 'liga' 1, 'kern' 1;
+}
+
+.navbar {
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(16, 35, 31, 0.08);
+  box-shadow: 0 12px 30px rgba(16, 35, 31, 0.05);
+}
+
+.navbar__title {
+  font-family: var(--ifm-heading-font-family);
+  font-size: 1.35rem;
+  letter-spacing: 0.01em;
+}
+
+.theme-doc-sidebar-container {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.theme-doc-markdown {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(16, 35, 31, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(16, 35, 31, 0.06);
+  padding: 2rem;
+}
+
+.theme-doc-markdown h1,
+.theme-doc-markdown h2,
+.theme-doc-markdown h3,
+.theme-doc-markdown h4 {
+  letter-spacing: -0.02em;
+}
+
+.theme-doc-markdown img {
+  display: inline-block;
+  max-width: 100%;
+  margin: 1.5rem 1rem 1.5rem 0;
+  border: 1px solid rgba(16, 35, 31, 0.08);
+  border-radius: 0;
+  box-shadow: 0 14px 36px rgba(16, 35, 31, 0.08);
+  vertical-align: top;
+}
+
+.theme-doc-markdown table {
+  display: table;
+  width: 100%;
+}
+
+.pagination-nav,
+.table-of-contents {
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(16, 35, 31, 0.08);
+  border-radius: 16px;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #3bc6b0;
+  --ifm-color-primary-dark: #26bea6;
+  --ifm-color-primary-darker: #22b39c;
+  --ifm-color-primary-darkest: #1c937f;
+  --ifm-color-primary-light: #50ceb9;
+  --ifm-color-primary-lighter: #5dd2bf;
+  --ifm-color-primary-lightest: #87ddd0;
+  --ifm-background-color: #0d1615;
+  --ifm-background-surface-color: #13211f;
+  --ifm-navbar-background-color: rgba(13, 22, 21, 0.9);
+  --ifm-font-color-base: #d7e7e2;
+  --ifm-font-color-secondary: #bed2cb;
+  --ifm-heading-color: #f2fbf8;
+  --ifm-color-emphasis-700: #c7dbd4;
+  --ifm-color-emphasis-800: #d9ebe5;
+  --ifm-color-emphasis-900: #effaf6;
+  --ifm-link-color: #7ce0d2;
+  --ifm-menu-color-active: #7ce0d2;
+  --ifm-footer-background-color: #07100f;
+  --ifm-footer-color: #d6ece6;
+  --ifm-footer-link-color: #f3fffc;
+  --ifm-toc-border-color: rgba(124, 224, 210, 0.18);
+  --docusaurus-highlighted-code-line-bg: rgba(124, 224, 210, 0.12);
+}
+
+html[data-theme='dark'] {
+  background:
+    radial-gradient(circle at top right, rgba(59, 198, 176, 0.12), transparent 24%),
+    linear-gradient(180deg, #081110 0%, #0e1917 100%);
+}
+
+[data-theme='dark'] .navbar {
+  border-bottom-color: rgba(124, 224, 210, 0.12);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme='dark'] .theme-doc-sidebar-container {
+  background: rgba(10, 20, 19, 0.8);
+}
+
+[data-theme='dark'] .theme-doc-markdown {
+  background: rgba(18, 31, 29, 0.92);
+}
+
+[data-theme='dark'] .pagination-nav,
+[data-theme='dark'] .table-of-contents {
+  background: rgba(16, 28, 26, 0.88);
+}
+
+[data-theme='dark'] .theme-doc-sidebar-container,
+[data-theme='dark'] .theme-doc-markdown,
+[data-theme='dark'] .pagination-nav,
+[data-theme='dark'] .table-of-contents {
+  border-color: rgba(124, 224, 210, 0.12);
+  box-shadow: none;
+}
+
+[data-theme='dark'] .theme-doc-markdown img {
+  border-color: rgba(124, 224, 210, 0.14);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+}
