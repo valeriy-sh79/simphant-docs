@@ -3,7 +3,7 @@ title: Mathematical Foundations
 sidebar_label: Mathematical Foundations
 ---
 
-The mathematical foundations of the Program Solver are based on the math and physics formulations as defined in the A.A. Shabana's book "Computational Dynamics" focusing specifically on the Differential-Algebraic Equation (DAE) formulation for a rigid multi-body systems.
+The mathematical foundations of the SimPhant Program Solver are based on the math and physics formulations as defined in the A.A. Shabana's book "Computational Dynamics" focusing specifically on the Differential-Algebraic Equation (DAE) formulation for a rigid multi-body systems.
 
 ## State Vector and Quaternions
 

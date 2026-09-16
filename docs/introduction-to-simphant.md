@@ -13,12 +13,11 @@ hide_title: true
 
 Welcome to the official documentation for SimPhant, an advanced Multibody Dynamics (MBD) Physics Engine and Simulation environment!
 
+SimPhant is high-precision software for rigorous analytical mechanical modeling, developed to bring your ideas and inventions to life through in-depth analysis of rigid-body systems.
 
-SimPhant is a high-fidelity, strictly analytical mechanical simulation software built to bridge the gap between 3D CAD design and rigorous mathematical analysis. Powered by a custom Python-based Differential-Algebraic Equation (DAE) Solver, SimPhant uses an Augmented Formulation and Schur Complement matrix mathematics to perfectly resolve complex mechanical constraints.
+Whether you are modeling a simple pendulum, sizing motors for a multi-axis robotic arm, or calculating the bearing loads inside a planetary gear train, SimPhant evaluates exact physics at every time step without the mathematical sponginess or constraint drift.
 
-Whether you are analyzing a simple pendulum, sizing motors for a multi-axis robotic arm, or calculating the bearing loads inside a planetary gear train, SimPhant evaluates exact physics at every time step without the mathematical sponginess or constraint drift.
-
-The primary purpose of SimPhant is to provide engineers, researchers, and roboticists with exact engineering truth. Unlike iterative real-time gaming physics engines that rely on artificial damping and positional corrections for visual stability, SimPhant prioritizes true kinematic accuracy, thermodynamic energy conservation, and exact extraction of constraint forces using the Lagrange multipliers.
+The primary purpose of SimPhant is to provide engineers, researchers, and roboticists with exact engineering truth. Unlike iterative real-time gaming physics engines that rely on artificial damping and positional corrections for visual stability, SimPhant prioritizes true kinematic accuracy, thermodynamic energy conservation, and exact extraction of constraint forces using the Lagrange multipliers. Powered by a custom Python-based Differential-Algebraic Equation (DAE) Solver, SimPhant uses an Augmented Formulation and Schur Complement matrix mathematics to perfectly resolve complex mechanical constraints.
 
 SimPhant allows you to virtually assemble mechanical systems, apply real-world dynamic forces, and immediately extract the precise engineering telemetry required to size real-world bearings, tune control loops, and validate mechanical durability.
 
@@ -52,3 +51,21 @@ The software provides the user with a comprehensive suite of mechanical modeling
 -   **Adaptive Integrators:** Choose between high-speed fixed-step solvers (RK4, Symplectic Euler) or industry-standard adaptive algorithms (SciPy RK45, Radau, BDF, LSODA) designed to handle extremely stiff differential equations.
 -   **Telemetry Post-Processor:** Instantly graph system energy, rigid body kinematics (displacement, velocity, acceleration), and exact joint reaction forces in a dedicated plotting window.
 -   **Data & Media Export:** Export telemetry directly to CSV for external analysis in MATLAB or Excel, or render high-quality WebM animations of your functioning mechanism.
+
+### Getting Started
+
+The fastest way to start with SimPhant is:
+
+1. Download the latest Windows package from [GitHub Releases](https://github.com/valeriy-sh79/SimPhant/releases).
+2. Launch `SimPhant.exe`.
+3. Open one of the bundled models from the [Examples] folder to explore how real mechanisms are modeled and simulated.
+
+### Product Links
+
+If you want to inspect the implementation, modify the solver, or contribute code, use the Python source edition instead.
+
+- Source repository: [SimPhant](https://github.com/valeriy-sh79/SimPhant)
+- Windows releases: [GitHub Releases](https://github.com/valeriy-sh79/SimPhant/releases)
+- Documentation website: [SimPhant Docs](https://valeriy-sh79.github.io/simphant-docs/)
+- Documentation source: [simphant-docs](https://github.com/valeriy-sh79/simphant-docs)
+- Bug reports and feature requests: [Issue tracker](https://github.com/valeriy-sh79/SimPhant/issues)
