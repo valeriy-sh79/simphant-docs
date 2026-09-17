@@ -189,9 +189,9 @@ $$M \  = \  6 \cdot 1 \  – \  2 \cdot 5 \  = \  - 4$$,
 
 which means this is the Overconstrained Mechanism. In this case, the physics engine asks a mathematically impossible question: "Which of these joints is carrying the load?" Because the Bodies are treated as infinitely rigid, there are an infinite number of valid load distributions, which causes the Jacobian rows to become linearly dependent and crashes the matrix solver.
 
-**Matrix Regularization (Tikhonov Regularization)** is integrated to solve the Overconstraint problem. How it works: Instead of making the constraints infinitely rigid, it injects a microscopic amount of "compliance" (elasticity) directly into the matrix diagonal. This fixes the singular matrix instantly without changing the matrix size.
+**Matrix Regularization (Tikhonov Regularization)** is integrated to solve the Overconstraint problem. How it works: mathematically, it relaxes the infinitely rigid kinematic constrain and allows infinitesimal accelerations to pass through the joint, and a microscopic joint drift appears under the joint reaction force. This instantly resolves singular matrices and allows perfectly rigid joints to safely share loads.
 
-In Tikhonov Regularization, the value in the User Intrface (for example: -1E-7) physically represents Constraint Compliance (m/N), the exact opposite of Stiffness. Mathematically, it acts like a virtual spring inserted into the Joint, which allows to share the load between the Joints.
+In Tikhonov Regularization, the value in the User Intrface Epsilon (for example: -1E-7) is the reciprocal of mass with units of $$kg^{-1}$$ (or Inverse Inertia $$1/kgm^2$$ for rotation). If Epsilon is zero (the default), this corresponds to infinite virtual mass and a perfectly rigid connection. Increasing Epsilon effectively gives the connection a finite virtual mass that shifts slightly under the influence of the connection's reaction forces, thereby avoiding a singularity.
 
 **Example of Usage:**
 

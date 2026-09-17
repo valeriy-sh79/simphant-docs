@@ -272,7 +272,7 @@ $$
 
 Where:
 
-$$\epsilon$$ is the value (for example: -1E-7) physically represents Constraint Compliance (m/N), the exact opposite of Stiffness,
+$$\epsilon$$ is the value (for example: -1E-7) physically represents an Artificial Inverse Mass with units of $$kg^{-1}$$ (or Inverse Inertia $$1/kgm^2$$ for rotation),
 
 $$I = \begin{bmatrix}1 & \cdots & 0 \\ \vdots & 1 & \vdots \\ 0 & \cdots & 1\end{bmatrix}$$ is the Identity matrix.
 
