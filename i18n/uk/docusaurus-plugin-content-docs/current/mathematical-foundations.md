@@ -37,6 +37,8 @@ $$
 A = \begin{bmatrix}1 \  - \  2 \left( q_{y}^{2} + \  q_{z}^{2} \right) & 2 \left( q_{x} q_{y} - \  q_{w} q_{z} \right) & 2 \left( q_{x} q_{z} + \  q_{w} q_{y} \right) \\ 2 \left( q_{x} q_{y} + \  q_{w} q_{z} \right) & 1 \  - \  2 \left( q_{x}^{2} + \  q_{z}^{2} \right) & 2 \left( q_{y} q_{z} - \  q_{w} q_{x} \right) \\ 2 \left( q_{x} q_{z} - \  q_{w} q_{y} \right) & 2 \left( q_{y} q_{z} + \  q_{w} q_{x} \right) & 1 \  - \  2 \left( q_{x}^{2} + \  q_{y}^{2} \right)\end{bmatrix}
 $$
 
+Перетворення матриці повороту на кватерніон і зворотне перетворення кватерніону на матрицю повороту тіла виконується бібліотекою SciPy.
+
 Матриця повороту перетворюється на кути Ейлера (кути Тейта-Брайана типу Z-Y-X) виключно для оновлення 3D-графіки PyVista на екрані (у вікні перегляду):
 
 $$
@@ -49,7 +51,16 @@ $$
 \dot{\mathbf{q}} = \frac{1}{2} \mathbf{G}^{T} \mathbf{\omega}
 $$
 
-де **G** — матриця, сформована на основі поточних значень кватерніона.
+де **G** — матриця, сформована на основі поточних значень кватерніона. Похідна кватерніона з локальної кутової швидкості обчислюється вирішувачем:
+
+$$
+\begin{aligned}
+\dot q_x &= \tfrac12 (q_w \omega_x + q_y \omega_z - q_z \omega_y) \\
+\dot q_y &= \tfrac12 (q_w \omega_y + q_z \omega_x - q_x \omega_z) \\
+\dot q_z &= \tfrac12 (q_w \omega_z + q_x \omega_y - q_y \omega_x) \\
+\dot q_w &= -\tfrac12 (q_x \omega_x + q_y \omega_y + q_z \omega_z)
+\end{aligned}
+$$
 
 ## Центроїдальна система координат тіла (Centroidal Body Coordinate System)
 

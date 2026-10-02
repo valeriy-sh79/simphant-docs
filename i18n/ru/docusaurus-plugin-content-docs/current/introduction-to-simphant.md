@@ -4,14 +4,14 @@ sidebar_label: Введение
 hide_title: true
 ---
 
-<h1 style={{ textAlign: 'center' }}>SimPhant™</h1>
+<h1 style={{ textAlign: 'center' }}>SimPhant</h1>
 <h1 style={{ textAlign: 'center' }}>Руководство пользователя</h1>
 
 <div style={{ textAlign: 'center' }}>
   <img src={require('./media/ac0ae53e13223a52af6acb61ab1997a9.png').default} alt="SimPhant" width="250" height="200" style={{ objectFit: 'contain', margin: '1.5rem auto', border: 'none', boxShadow: 'none' }} />
 </div>
 
-Добро пожаловать в официальную документацию по SimPhant — продвинутой среде физики, моделирования и симуляций динамики многотельных систем!
+Добро пожаловать в официальную документацию по SimPhant™ — продвинутой среде физики, моделирования и симуляций динамики многотельных систем!
 
 SimPhant — это высокоточное программное обеспечение для строгого аналитического моделирования механики, призванное реализовать Ваши идеи и изобретения методами углубленного анализа систем твердых тел.
 

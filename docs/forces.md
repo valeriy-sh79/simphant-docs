@@ -96,6 +96,39 @@ Result: If t ≤1, output 0. If t \> 1, output 2.
 
 ![](media/f0be86b6c53627d73fd38fd994ce37bb.png)
 
+### Read path spline from data file
+
+Force/torque can be defined as a custom spline constructed from a user-specified time series imported from a data file (DAT or CSV). 
+ 
+![](media/20260926_spline_button.png)
+
+‘Spline’ button calls a dedicated spline dialog including ´Browse..´ button for the data file selection and plot window showing the points from the user’s data file with spline connecting these points. 
+The path to the spline data file is saved in the force/torque formula bar as following: spline(path\file_name).
+
+![](media/20260926_spline_window.png)
+
+Once the data file is loaded, the interpolator object is prepared (scipy.interpolate.Akima1DInterpolator), so the solver evaluates that interpolator directly at whatever time it needs.
+
+**Following rules are considered for the spline creation:**
+
+1.	For times outside the file range, first value is used before first time, and last value is used after last time.
+2.	File values have the same units as the current UI fields:
+- Force: N,
+- Torque: Nmm,
+- Motion displacement: mm or rad depending on translational/rotational mode,
+- Motion velocity: mm/s or rad/s depending on mode.
+
+3.	Spline mode is disabled for actuator and e-motor paths.
+4.	Data validation of the user data file:
+- at least 2 valid rows,
+- first numeric column = time, second numeric column = value,
+- ignore extra columns,
+- skip header rows,
+- auto-detect delimiter: comma, semicolon, tab, or whitespace,
+- reject or normalize duplicate time values,
+- sort by time if needed.
+
+
 ## Actuator
 
 Actuator in the simulation is the Force with the limited power.
@@ -351,3 +384,27 @@ Below is the graph example representing the sliding friction coefficient $$\mu =
 ![](media/f74f3fef3d191fc5b66717e6da336f4f.png)
 
 Note: as is evident from the definition, when the relative sliding velocity is 0, the static friction (Stiction) is not calculated in this model. The friction force appears as the sliding friction once the relative motion between the contacted bodies along the contact plane is detected.
+
+### Advanced collision settings
+
+Two optimization options are available in the program:
+ 
+![](media/20261002_advanced_collision_settings.png)
+
+#### 1) One-sided penetrator selection (smaller mesh as penetrator only)
+Enabled: solver checks both bodies of a contact pair as the penetrator. Keep this option enabled for correct detection.
+
+Disabled: solver checks smaller body of a contact pair as the penetrator. Disabling is an experimental speed-up, but it can miss contacts on some geometries. 
+
+#### 2) Conservative candidate-vertex reduction
+Merges duplicate nearby contact points before the proximity check to speed up dense contact patches. Safe to leave enabled.
+Disable only to debug or inspect raw contact candidates, solver speed is reduced in this case. 
+
+How does this work: two parameters control which vertices reach the expensive nearest-surface query in the solver. They do not change the collision mesh itself.
+1.	contact_candidate_reduction_threshold = 96: Reduction is attempted only when more than 96 vertices from one penetrator have passed the overlap-box filter. With 96 or fewer, every candidate goes directly to the nearest-surface query. This avoids paying for voxel sorting when the batch is already small.
+2.	contact_candidate_voxel_size_m = 1e-3: The target-local candidate positions are divided into cubic cells with sides of 0.001 m (1 mm). When multiple vertices fall in the same cell, only one of those vertices is sent to the nearest-surface query. This is done separately for each direction of the two-sided contact search in the solver.
+
+### Collision post-processing
+
+Collision post-processing is time-consuming and is triggered only when the user opens the Telemetry or exports data to CSV format.
+

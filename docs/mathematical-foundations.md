@@ -37,6 +37,8 @@ $$
 A = \begin{bmatrix}1 \  - \  2 \left( q_{y}^{2} + \  q_{z}^{2} \right) & 2 \left( q_{x} q_{y} - \  q_{w} q_{z} \right) & 2 \left( q_{x} q_{z} + \  q_{w} q_{y} \right) \\ 2 \left( q_{x} q_{y} + \  q_{w} q_{z} \right) & 1 \  - \  2 \left( q_{x}^{2} + \  q_{z}^{2} \right) & 2 \left( q_{y} q_{z} - \  q_{w} q_{x} \right) \\ 2 \left( q_{x} q_{z} - \  q_{w} q_{y} \right) & 2 \left( q_{y} q_{z} + \  q_{w} q_{x} \right) & 1 \  - \  2 \left( q_{x}^{2} + \  q_{y}^{2} \right)\end{bmatrix}
 $$
 
+That conversion of the rotation matrix to a quaternion, and the quaternion back into the body rotation matrix is handled by SciPy.
+
 The Rotation Matrix is converted into Euler Angles (Z-Y-X Tait–Bryan angles) solely to update PyVista's 3D graphics on the screen (Viewport):
 
 $$
@@ -50,6 +52,16 @@ $$
 $$
 
 Where **G** is a matrix constructed from the current quaternion values.
+Quaternion derivative from local angular velocity is handled by solver:
+
+$$
+\begin{aligned}
+\dot q_x &= \tfrac12 (q_w \omega_x + q_y \omega_z - q_z \omega_y) \\
+\dot q_y &= \tfrac12 (q_w \omega_y + q_z \omega_x - q_x \omega_z) \\
+\dot q_z &= \tfrac12 (q_w \omega_z + q_x \omega_y - q_y \omega_x) \\
+\dot q_w &= -\tfrac12 (q_x \omega_x + q_y \omega_y + q_z \omega_z)
+\end{aligned}
+$$
 
 ## Centroidal Body Coordinate System
 

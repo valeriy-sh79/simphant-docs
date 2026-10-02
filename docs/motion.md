@@ -115,3 +115,35 @@ The Body remains stationary until the 1st second, then instantly begins rotating
 ![](media/ddd3d68e44caf03ac868d809d075c8a9.png)
 
 Warning: As shown in this example, the function exhibits a discontinuity at t=1, which can lead to an unreliable solution or even solver failure. Therefore, it is preferable to use a STEP function with a smooth parameter transition.
+
+## Read path spline from data file
+
+Motion and force/torque can be defined as a custom spline constructed from a user-specified time series imported from a data file (DAT or CSV). 
+ 
+![](media/20260926_spline_button.png)
+
+‘Spline’ button calls a dedicated spline dialog including ´Browse..´ button for the data file selection and plot window showing the points from the user’s data file with spline connecting these points. 
+The path to the spline data file is saved in the Motion (Force/torque) formula bar as following: spline(path\file_name).
+
+![](media/20260926_spline_window.png)
+
+Once the data file is loaded, the interpolator object is prepared (scipy.interpolate.Akima1DInterpolator), so the solver evaluates that interpolator directly at whatever time it needs.
+
+**Following rules are considered for the spline creation:**
+
+1.	For times outside the file range, first value is used before first time, and last value is used after last time.
+2.	File values have the same units as the current UI fields:
+- Force: N,
+- Torque: Nmm,
+- Motion displacement: mm or rad depending on translational/rotational mode,
+- Motion velocity: mm/s or rad/s depending on mode.
+
+3.	Spline mode is disabled for actuator and e-motor paths.
+4.	Data validation of the user data file:
+- at least 2 valid rows,
+- first numeric column = time, second numeric column = value,
+- ignore extra columns,
+- skip header rows,
+- auto-detect delimiter: comma, semicolon, tab, or whitespace,
+- reject or normalize duplicate time values,
+- sort by time if needed.
