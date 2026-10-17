@@ -263,7 +263,7 @@ The collision is modeled as a compliant contact (Penalty Method): when bodies ov
 Once the collision between two bodies is detected, the contact force is calculated based on the Hertzian contact model:
 
 $$
-F = k \cdot \delta^{e} + C \cdot v_{n} \cdot \delta
+F = k \cdot \delta^{e} + C_{eff} \cdot v_{n} \cdot \delta
 $$
 
 where
@@ -272,15 +272,23 @@ $$k$$ is the contact stiffness,
 
 $$\delta$$ is the penetration depth of two bodies,
 
-C is damping coefficient,
+$$C_{eff}$$ is damping defined as following:
 
-$$v_{n}$$ is the relative velocity of the bodies at the contact point
+$$C_{eff}=C \cdot min⁡(\delta,\delta_{max})/\delta_{max}$$
 
-e is the force exponent
+$$C_{eff}$$ ramps from 0 at 0 depth to C at max penetration depth,
 
-Note: The damping is multiplied by the penetration depth δ so that the damping force drops smoothly to zero as the bodies separate. This prevents them from "sticking" together like glue.
+$$C$$ is user defined damping coefficient,
 
-![](media/d39a09a6db02043f7594bf64a70b854b.png) ![](media/88dcc39e0b49f04a1e02f0c4d882b859.png)
+$$\delta_{max}$$ is the depth of penetration at which the damping coefficient linearly increases to a user-specified value (C),
+
+$$v_{n}$$ is the relative velocity of the bodies at the contact point,
+
+e is the force exponent.
+
+Note: The damping force drops smoothly to zero as the bodies separate. This prevents them from "sticking" together like glue.
+
+![](media/20261017_contact_properties.png) ![](media/88dcc39e0b49f04a1e02f0c4d882b859.png)
 
 The Contact is defined by the following parameters:
 
@@ -290,6 +298,7 @@ The Contact is defined by the following parameters:
 -   Stiffness (N/mm\^e): contact stiffness (k) for the normal force calculation,
 -   Damping (Ns/mm): contact damping (C) for the normal force calculation,
 -   Force exponent depends on the contact pattern on the Hertzian contact model,
+-   Penetration depth (max) $$\delta_{max}$$: is the depth of penetration at which the damping coefficient increases to a user-specified value (C),
 -   Four Contact processing methods are available in the dropdown menu.
 
 ### Contact processing methods

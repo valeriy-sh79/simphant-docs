@@ -9,9 +9,21 @@ sidebar_label: Bodies
 
 The CAD models can be imported to the program as .obj or .stl file.
 
-![](media/8af957954fbd9a50629b13a63937967a.png) ![](media/a4f224e5126ea1c0ef30182499065635.png)
+![](media/20261017_OBJ_import.png) ![](media/a4f224e5126ea1c0ef30182499065635.png)
 
 Right after the import, the geometry and mass properties of each rigid body are automatically calculated.
+
+## Import URDF robotic models
+
+The program supports a direct import of URDF files (Unified Robot Description Format), which is an XML-based file format developed for the Robot Operating System to describe the physical and kinematic properties of a robot model.
+ 
+![](media/20261017_URDF_import.png)
+
+The URDF-file shall have the `meshes` folder including the CAD models (STL files) of all parts listed in the related URDF file. The robot components (links) are connected by the related joints according to the URDF file structure after the import, so the robot is immediately ready for the simulation.
+
+Various URDF models of the robots and robotic mechanisms are available on GitHub. 
+
+![](media/20261017_URDF_import_example.png)
 
 ## Rigid Body Properties
 

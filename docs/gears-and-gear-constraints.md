@@ -348,3 +348,4 @@ Example of the Hierarchy of the Gear Constraints for the Planetary Gearset:
 -   When defining the Bevel Gear Constraint, the Pitch Angle of Gear 1 is defined by the user, and the Pitch Angle of Gear 2 is automatically calculated considering the Bevel Gear axes relative angle is 90 degree.
 -   The Revolute Joint axes (shafts) for Bevel gears must intersect perfectly in 3D space, and they must be positioned at a standard 90° angle.
 -   Carrier definition Rule (important for Planetary gearsets, Differentials, etc): the Carrier Body is the body relative to which the centers of both gears do not move.
+-   Baumgarte stabilization can be optionally activated for the Gear Constraint in the code.

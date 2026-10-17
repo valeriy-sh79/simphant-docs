@@ -31,7 +31,7 @@ Compression Spring is defined by the following parameters in the User Interface:
 -   Damping (Ns/mm): Spring Damping (C),
 -   Preload (N): Spring initial force preload: it is pushing if positive and compressing if negative.
 
-![](media/c1f904a73cb8d50a9749089f0370f28c.png) ![](media/24708c62e034014b40a50877cdbd3242.png)
+![](media/20261017_compr_spring.png) ![](media/24708c62e034014b40a50877cdbd3242.png)
 
 Once the Spring is defined, the Stiffness, Damping and Preload can be later updated, but the related free-standing Reference Frames are locked for edition. At the same time, by demand, the CoG Reference Frame can be shifted with the Spring and related rigid Body.
 
@@ -61,6 +61,41 @@ $$\dot{L}$$ is the relative velocity of RF_Body_I and RF_Body_J,
 
 The calculated spring force ($$F_{s p r i n g}$$) is applied as an Action-Reaction to the Body_I and Body_J, as well as the local Torques based on the cross product of the lever arms form the Bodies’ CoGs to the points of Spring force application (‘RF Body I’ and ‘RF Body J’).
 
+### User defined Non-Linear Compression Spring Damper
+
+User can specify the Non-Linear Spring Force F(x, v).
+Follows the spring force convention: 
+
+$$
+F_{spring}=F_{preload}-F\left(x,v\right)
+$$
+
+where:
+
+x = ΔL = L - L_initial, in mm (positive when stretched).
+
+v = d(ΔL)/dt, in mm/s.
+
+F(x, v) must be returned in N.
+
+Example: to replicate a linear Stiffness K and Damping C, enter: 
+
+-K\*x - C\*v
+
+It is possible to use ‘np.’ to call any standard NumPy math function, for example:
+
+np.cosh(x), np.sign(v), etc.
+
+Following custom functions are supported in the program:
+
+The STEP function changes smoothly between two specified values.
+
+Syntax: step(x; x0; F0; x1; F1)
+
+The IF function:
+
+Syntax: if(\<condition\>; \<value if less or equal to 0\>; \<value if greater than 0\>).
+
 ## Torsion Spring
 
 Torsion spring can be defined between any two rigid Bodies (or Ground) in the specific point along the specific direction.
@@ -87,7 +122,7 @@ As is evident from the definition, once Anchor RF is defined, there are two ways
 1.  If Torque axis is one of the Anchor RF axes, then this axis can be selected by XYZ-dropdown box;
 2.  If Target RF is defined, then Torque axis will connect the Anchor and the Target reference frames. XYZ-dropdown is not considered in this case.
 
-![](media/9d0922083783015ea997c3f4568a654a.png) ![](media/d062efd005214f98bd36d018e04dff6c.png)
+![](media/20261017_torsion_spring.png) ![](media/d062efd005214f98bd36d018e04dff6c.png)
 
 Once the Spring is defined, the Stiffness, Damping and Preload can be later updated, but the related free-standing Reference Frames are locked for edition. At the same time, by demand, Body_I or Body_J can be shifted or rotated by their CoG Reference Frames.
 
@@ -108,6 +143,43 @@ $$\mathrm{\Delta} \theta$$ is the Spring deformation calculated as relative rota
 $$\dot{\theta}$$ is the relative angular velocity of Body_I and Body_J along the Torque axis.
 
 The calculated Spring Torque magnitude ($$T_{s p r i n g}$$) is applied as an Action-Reaction Torque to the Body_I and Body_J.
+
+### User defined Non-Linear Torsion Spring Damper
+
+User can specify the Non-Linear Spring Torque T(theta, omega).
+
+Follows the spring torque convention: 
+
+$$
+T_{spring}=T_{preload}-T\left(\theta,\omega\right)
+$$
+
+where:
+
+theta = twist angle relative to the initial angle, in rad.
+
+omega = d(theta)/dt, in rad/s.
+
+T(theta, omega) must be returned in Nmm.
+
+Example: to replicate a linear Stiffness K and Damping C, enter: 
+
+-K\*theta - C\*omega
+
+It is possible to use ‘np.’ to call any standard NumPy math function, for example:
+
+np.cosh(theta), np.sign(omega), etc.
+
+Following custom functions are supported in the program:
+
+The STEP function changes smoothly between two specified values.
+
+Syntax: step(theta; th0; T0; th1; T1)
+
+The IF function:
+
+Syntax: if(\<condition\>; \<value if less or equal to 0\>; \<value if greater than 0\>).
+
 
 ## Bushing
 
