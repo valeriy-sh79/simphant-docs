@@ -3,31 +3,65 @@ title: Mathematical Foundations
 sidebar_label: Mathematical Foundations
 ---
 
-The mathematical foundations of the SimPhant Program Solver are based on the math and physics formulations as defined in the A.A. Shabana's book "Computational Dynamics" focusing specifically on the Differential-Algebraic Equation (DAE) formulation for a rigid multi-body systems.
+The solver follows A.A. Shabana’s Computational Dynamics in Differential-Algebraic Equation (DAE) form for rigid bodies. Joints, gear couplers and kinematic motions are constraints, solved with Lagrange multipliers. Springs, bushings, actuators and contacts are force elements that enter the equations as generalized forces.
 
-## State Vector and Quaternions
+## The Body State Vector
 
-For every moving Rigid Body, the state is defined by a single 1D numerical array, the State Vector:
+The state of every moving Body_i (enabled, not Ground) is defined by:
+
+- $\mathbf r=[x,y,z]^T$: CoG position, global frame,
+- $\mathbf A$: rotation matrix in the Evaluator (RigidBody class), global frame,
+- or $\mathbf q_{e}=[q_x,q_y,q_z,q_w]^T$: orientation quaternion in the Integrator, global frame,
+- $\mathbf v=[v_x,v_y,v_z]^T$: CoG velocity, global frame,
+- $\boldsymbol\omega=[\omega_x,\omega_y,\omega_z]^T$: angular velocity, **body-local** frame.
+
+<img src={require('./media/20261019_body_state_vector.png').default} alt="Body State Vector" style={{ width: '100%', maxWidth: '400px', height: 'auto', boxShadow: 'none' }} />
+
+
+The local frame is the principal-axes frame of inertia at the CoG. The rotation matrix $\mathbf A_i$ maps local to global vectors: 
 
 $$
-\mathbf{Y \ } = \  \left\lbrack \mathbf{q} \mathbf{, \ } \dot{\mathbf{q}} \right\rbrack^{T}
+\mathbf x_{global}=\mathbf A\mathbf x_{local}
 $$
 
-The State vector is defined by two vectors:
+The body state is 1D array: the 7N position block and 6N velocity block. 
 
-Position and orientation: $$\mathbf{q} = \left\lbrack x , \  y , \  z , \  q_{w} , \  q_{x} , \  q_{y} , \  q_{z} \right\rbrack^{T}$$,
+$$
+\mathbf Y_1=\big[\mathbf r,\mathbf q_{e},\mathbf v,\boldsymbol\omega]^T
+$$
 
-Translational and angular Velocities: $$\dot{\mathbf{q}} = \left\lbrack v_{x} , \  v_{y} , \  v_{z} , \  \omega_{x} , \omega_{y} , \  \omega_{z} \right\rbrack^{T}$$.
+The body state vector for N rigid Bodies in the system:
 
-Where:
+$$
+\mathbf Y=\big[\mathbf q\big |\;\boldsymbol\nu\big]^T
+$$
 
-$$\mathbf{r} = [ x , y , z ]^{T}$$ the Body spatial position vector,
+$$
+\mathbf q=\big[\mathbf r_1,\mathbf q_{e1},\dots,\mathbf r_N,\mathbf q_{eN}\;\big]^T
+$$
 
-$$\mathbf{v} = \left\lbrack v_{x} , v_{y} , v_{z} \right\rbrack^{T}$$ the Body translational Velocity vector,
+$$
+\qquad \boldsymbol\nu=[\mathbf
+v_1,\boldsymbol\omega_1,\dots,\mathbf v_N,\boldsymbol\omega_N]^T
+$$
 
-$$\mathbf{\omega} = \left\lbrack \omega_{x} , \omega_{y} , \omega_{z} \right\rbrack^{T}$$ the Body Angular Velocity vector in Local Body RF,
+$$
+\qquad \dim\mathbf Y=13N
+$$
 
-**Quaternions** $$( q_{w} , \  q_{x} , \  q_{y} , \  q_{z} )$$ define the Body orientation: angular position of the Body principal axes in the Global RF.
+$q$ is the vector of generalized coordinates,
+
+$\boldsymbol\nu$ is the vector of generalized velocities,
+
+$N$ is the number of Bodies in the simulation.
+
+### Quaternions  
+
+Quaternions define the Body orientation: angular position of the Body principal axes in the Global RF.
+
+$$
+q_e=[ q_{w} , \  q_{x} , \  q_{y} , \  q_{z} ]
+$$
 
 Quaternions are used to prevent the Gimbal Lock situation during the integration (which could instantly crash the DAE solver), and due to the SciPy's Rotation class is heavily optimized for Quaternions.
 
@@ -39,16 +73,46 @@ $$
 
 That conversion of the rotation matrix to a quaternion, and the quaternion back into the body rotation matrix is handled by SciPy.
 
-The Rotation Matrix is converted into Euler Angles (Z-Y-X Tait–Bryan angles) solely to update PyVista's 3D graphics on the screen (Viewport):
+### Euler angles
+
+The Rotation Matrix 
+
+$$
+\mathbf A=\mathbf R_z(\theta_z)\mathbf R_y(\theta_y)\mathbf R_x(\theta_x)
+$$
+
+is converted into Euler Angles (Z-Y-X Tait–Bryan angles):
 
 $$
 \begin{cases}\theta_{z} = \arctan \left( \frac{A_{21}}{A_{11}} \right) \\ \theta_{y} = \arcsin \left( - A_{31} \right) \\ \theta_{x} = \arctan \left( \frac{A_{32}}{A_{33}} \right)\end{cases}
 $$
 
+As implemented in the code:
+
+$$
+\begin{cases}\theta_{z} = \operatorname{atan2}(A_{21},A_{11}) \\ \theta_{y} = \arcsin \left( - A_{31} \right) \\ \theta_{x} = \operatorname{atan2}(A_{32},A_{33})\end{cases}
+$$
+
+Euler angles are stored in degrees as [Yaw $\theta_z$, Pitch $\theta_y$, Roll $\theta_x$]. They are used mainly for angles inputs and display in the user interface (UI), CSV export and project files. Euler angles are not used in the solver for integrations, because they are singular at $\theta_y=\pm90^\circ$ (gimbal lock issue).
+
+Therefore, the 3D viewport uses rotation matrix $A$ and the CoG directly.
+
+### Kinematics
+
+The time derivatives of the body coordinates:
+
+$$
+\dot{\mathbf r}_i=\mathbf v_i
+$$
+ 
+$$
+\dot{\mathbf q}_{ei}=\tfrac12\mathbf G^T(\mathbf q_{ei})\boldsymbol\omega_i
+$$
+
 The relation between the first time derivative of the body quaternions in 3D space and the Body angular velocity vector in the Body local reference frame:
 
 $$
-\dot{\mathbf{q}} = \frac{1}{2} \mathbf{G}^{T} \mathbf{\omega}
+\dot{\mathbf{q_e}} = \frac{1}{2} \mathbf{G}^{T} \mathbf{\omega_{local}}
 $$
 
 Where **G** is a matrix constructed from the current quaternion values.
@@ -79,10 +143,23 @@ $$
 \mathbf{M} = \begin{bmatrix}M_{1} & \cdots & 0 \\ \vdots & \ddots & \vdots \\ 0 & \cdots & M_{n}\end{bmatrix}
 $$
 
-The use of a Centroidal body coordinate system is one of the basic assumptions made in developing the fundamental Newton–Euler equations considered in the Solver:
+The origin of each body frame is its CoG. For Body $i$, $\mathbf M_i=\mathrm{diag}(m_i,m_i,m_i,J_{xx},J_{yy},J_{zz})$ with the principal moments of inertia $J$. The global matrix $\mathbf M=\mathrm(\mathbf M_1,\dots,\mathbf M_N)$ is $6N\times6N$. $N$ counts the **enabled, non-Ground bodies**. Ground has no coordinates (index −1). $\mathbf M$ is diagonal and constant, so the program stores only its 6N diagonal entries. $\mathbf M^{-1}\mathbf x$ is an elementwise division, so no inverse or factorization is needed.
+
+Translations are written in the global frame and rotations in the local frame:
 
 $$
-\begin{bmatrix}M & \Phi_{q}^{T} \\ \Phi_{q} & 0\end{bmatrix} \begin{bmatrix}\ddot{q} \\ \lambda\end{bmatrix} = \begin{bmatrix}Q \\ \gamma\end{bmatrix}
+m_i\dot{\mathbf v}_i=\mathbf F_i
+$$
+
+$$
+\qquad \mathbf J_i\dot{\boldsymbol\omega}_i+\boldsymbol\omega_i\times(\mathbf J_i\boldsymbol\omega_i)=\mathbf T_i
+$$
+
+
+The use of a Centroidal body coordinate system is one of the basic assumptions made in developing the fundamental Newton–Euler equations considered in the Solver. The translational part has no centrifugal or Coriolis terms. The rotational part keeps the gyroscopic term, which is moved to the right-hand side. Taking into account the kinematic constraints, the system takes the form:
+
+$$
+\begin{bmatrix}M & \Phi_{q}^{T} \\ \Phi_{q} & 0\end{bmatrix} \begin{bmatrix}\dot{\nu} \\ \lambda\end{bmatrix} = \begin{bmatrix}Q \\ \gamma\end{bmatrix}
 $$
 
 Where:
@@ -91,17 +168,17 @@ $$\mathbf{M}$$: The Mass/Inertia matrix (size $$n \  \times n$$),
 
 $$\mathbf{\Phi}_{\mathbf{q}}$$: The Constraint Jacobian matrix (size $$m \  \times n$$),
 
-$$\ddot{\mathbf{q}}$$: The unknown system accelerations (size $$n \  \times 1$$),
+$\dot{\mathbf{\nu}}$: unknown system accelerations (size $$n \  \times 1$$),
 
-$$\mathbf{\lambda}$$: The unknown constraint reaction forces (size $$m \  \times 1$$),
+$$\mathbf{\lambda}$$: Lagrange Multipliers: the unknown constraint reaction forces  (size $$m \  \times 1$$),
 
-$$\mathbf{Q}$$: The known external forces and torques,
+$Q$: generalized forces, with forces global, torques local and gyroscopic torques,
 
-$$\mathbf{\gamma}$$: The known right-hand side kinematic accelerations,
+$\mathbf{\gamma^*}$: The known right-hand side kinematic accelerations,
 
 $$n = 6 N$$ is the number of degrees of freedom (DOFs) and $$m$$ is the number of constraints.
 
-In Multi-Body Dynamics, the simulation process reduces to solving the Augmented Mass Matrix to find accelerations $$\ddot{q}$$ and Lagrange multipliers $$\lambda$$ representing the Joints reactions.
+In Multi-Body Dynamics, the simulation process reduces to solving the Augmented Mass Matrix to find accelerations $$\dot{\nu}$$ and Lagrange multipliers $$\lambda$$ representing the Joints reactions.
 
 ## Hybrid Formulation
 
@@ -113,24 +190,38 @@ The position $$\mathbf{r} = [ x , y , z ]^{T}$$ and translational forces $$\math
 
 2\. Rotations are solved in the LOCAL (Body-Fixed) Frame:
 
-The angular velocity $$\overline{\mathbf{\omega}} = \  \left\lbrack \overline{\omega_{x}} , \  \overline{\omega_{y}} , \  \overline{\omega_{z}} \right\rbrack^{T}$$ and torques $$( \mathbf{T )}$$ are evaluated locally, because the Inertia Tensor ($$\widehat{\mathbf{J}}$$) is strictly constant in the Body Local reference frame. Since mass is also constant, the entire unconstrained Mass Matrix is 100% constant. It is constructed exactly once when the program starts, as well as its inverse matrix for the Schur Complement method.
+The angular velocity $$\overline{\mathbf{\omega}} = \  \left\lbrack \overline{\omega_{x}} , \  \overline{\omega_{y}} , \  \overline{\omega_{z}} \right\rbrack^{T}$$ and torques $$( \mathbf{T )}$$ are evaluated locally, because the Inertia Tensor ($$\widehat{\mathbf{J}}$$) is strictly constant in the Body Local reference frame. Since mass is also constant, it is built once per simulation run, when the solver object is created. Translational Jacobian columns are global, and rotational columns are local, so they contain $\mathbf A^T$.
 
 ## Physics Engine Architecture & Data Flow
 
 SciPy integrators and vectorized custom algorithms require the entire system's state to be a single 1D numerical array, the State Vector:
 
 $$
-\mathbf{Y \ } = \  \left\lbrack \mathbf{q} \mathbf{, \ } \dot{\mathbf{q}} \right\rbrack^{T}
+Y=[q \vert \nu {]}^T
 $$
 
-For N moving bodies, $$\mathbf{q}$$ (positions/angles) has size 7N, and $$\dot{\mathbf{q}}$$ (velocities) has size 6N.
+For N moving bodies, $q$ (positions/angles) has size 7N, and $\nu$ (velocities) has size 6N.
 
-The total size of $$\mathbf{Y}$$ is 13N.
+The total size of $Y$ is 13N.
 
 The simulation architecture is separated on the physics formulation from the time advancement.
 
--   **The System Evaluator:** A single, master function that takes the current time (t) and the current state vector ($$\mathbf{Y}$$), builds the matrices, solves the linear equations, and returns the accelerations.
--   **The Integrator:** The algorithm (RK4, Euler, BDF, etc.) that asks the System Evaluator for accelerations, and uses them to advance the state vector to the next time step ($$t \  + \  \Delta t$$).
+- **The System Evaluator:** A single, master function that takes the current time (t) and the current state vector ($Y$), builds the matrices, solves the linear equations, and returns the accelerations.
+- **The Integrator:** The algorithm (RK4, Euler, BDF, etc.) that asks the System Evaluator for accelerations, and uses them to advance the state vector to the next time step ($t + \Delta t$).
+
+The System Evaluator takes $(t,Y)$ and returns the full derivative:
+
+$$
+\dot{Y}=[\dot{q} \vert \dot{\nu}{]}^T
+$$
+
+$$
+\dot{Y}=[v_1,{\dot{q_e}}_1,\ldots,v_N,{\dot{q_e}}_N \vert {\dot{v}}_1,{\dot{\omega}}_1,\ldots,{\dot{v}}_N,{\dot{\omega}}_N{]}^T
+$$
+
+The Integrator advances $Y$ using only this function.
+
+![](media/20261021_simulation_data_flow.png)
 
 **Step 1: Data Collection & Initialization (The Object-Oriented Layer)**
 
@@ -140,163 +231,182 @@ The engine begins in the UI layer, where the user defines the 3D world.
 
 The 3D CAD data and user configurations are stored in high-level Python classes, as following:
 
--   **RigidBody**: Stores mass, center of gravity (cog), inertia tensors, and the initial kinematic state (position, velocity, quaternion, angular velocity).
--   **Joint**: Stores the topological connection between two bodies (body_i, body_j), the joint type (e.g., Revolute, Prismatic), and the local spatial vectors defining the anchor points and sliding/rotation axes.
--   **Force**: Stores user-defined external forces, torques, and gravity vectors.
+- **RigidBody**: Stores mass, center of gravity (cog), inertia tensors, and the initial kinematic state (position, velocity, quaternion, angular velocity).
+- **Joint**: Stores the topological connection between two bodies (body_i, body_j), the joint type (e.g., Revolute, Prismatic), and the local spatial vectors defining the anchor points and sliding/rotation axes.
+- **Force**: Stores user-defined external forces, torques, and gravity vectors.
 
-**1.2 Solver Initialization (MBSolver.__init__)**
+**1.2 Solver Initialization**
 
 When the Core Multibody Dynamics Solver (MBSolver) is instantiated, it makes preprocessing of the input data:
 
--   **Ground Filtration:** It filters out the "Ground" body, creating a list of only moving bodies. The solver strictly ignores the ground's degrees of freedom (reducing the matrix size) and treats it as an infinite-mass anchor (Index: -1).
--   **Body Mapping:** It assigns a strict integer index to every moving body (body_index_map).
--   **Mass Matrix (**$$\mathbf{M}$$**) Pre-computation:** Because the mass and local inertia of rigid bodies never change, the Solver builds the global 6NX6N block-diagonal Mass Matrix ($$\mathbf{M}$$) once.
+- **Ground Filtration:** It filters out the "Ground" body, creating a list of only moving bodies. The solver strictly ignores the ground's degrees of freedom (reducing the matrix size) and treats it as an infinite-mass anchor (Index: -1).
+- **Body Mapping:** It assigns a strict integer index to every moving body (body_index_map).
+- **Mass Matrix (**$M$**) Pre-computation:** Because the mass and local inertia of rigid bodies never change, the Solver builds the global 6NX6N block-diagonal Mass Matrix ($M$) once.
+- **The constraint rows** are counted: $m=m_{joints}+m_{gears}+m_{motions}$.
 
-**1.3 Static Data Packing for Numba (prepare_static_numba_data)**
+**1.3 Static Data Packing for Numba (prepare_static_numba_data) and baseline**
 
-Because the Numba JIT compiler (C-level code) cannot read Python objects, the solver extracts the immutable Joint properties (types, body indices, local anchors, and local axes) and flattens them into contiguous 1D and 2D NumPy arrays. This happens exactly once before the simulation starts.
+Because the Numba JIT compiler (C-level code) cannot read Python objects, the solver extracts the immutable Joint properties (types, body indices, local anchors, and local axes) and flattens them into contiguous 1D and 2D NumPy arrays. This includes the orthogonal triads $(v,a,b)$ and the gear data.  
+This happens exactly once before the simulation starts.
+
+The $t=0$ baselines are stored: spring $L_0$ and $\theta_0$, bushing offset and relative rotation, motion $\theta_0$ and $d_0$.
 
 **Step 2: The Execution Flow (The Integration Layer)**
 
-When the user clicks ‘Solve’ button, The UI reads the chosen integration method (e.g., RK4, BDF, Symplectic Euler) which takes complete control of the time-loop. Whether it is a custom explicit loop (like Euler) or a complex SciPy implicit solver (like BDF), the **Integrator** treats the physical system as a „black-box“ First-Order Ordinary Differential Equation (ODE):
+The user selects one of nine integrators.  
+\- Fixed step, with $\Delta t=t_{end}/\mathrm{int}(t_{end}\cdot\text{steps per s})$:  
+\- Custom RK4  
+\- Custom Euler  
+\- Custom Symplectic Euler  
+\- Adaptive, with rtol, atol and max step, reported on the same time grid: SciPy RK45, RK23, DOP853, Radau, BDF, LSODA.
+
+When the user clicks 'Solve' button, The UI reads the chosen integration method which takes complete control of the time-loop. Whether it is a custom explicit loop (like Euler) or a complex SciPy implicit solver (like BDF), the **Integrator** treats the physical system as a „black-box" First-Order Ordinary Differential Equation (ODE):
 
 $$
-\frac{d Y}{d t} = f ( t , Y )
+\frac{dY}{dt}=f\left(t,Y\right)
 $$
 
 To figure out how the system moves, the Integrator repeatedly calls the **Core Mathematical Evaluator**: evaluate_derivatives(t, Y) method. This is the "Gatekeeper" method.
 
 **Step 3: Building the KKT Matrix (Inside evaluate_derivatives)**
 
-Every time the Integrator needs to know the accelerations, it passes the current time (t) and state vector ($$\mathbf{Y}$$) into evaluate_derivatives(t, Y) method, which executes the following sequence:
+Every time the Integrator needs to know the accelerations, it passes the current time (t) and state vector ($Y$) into evaluate_derivatives(t, Y) method, which executes the following sequence:
 
-**3.1 State Unpacking & Forces (**$$\mathbf{Q}$$**)**
+**3.1 State Unpacking & Forces (**$Q$**)**
 
--   **unpack_state(Y)** method maps the flat vector $$\mathbf{Y}$$ back into the 3D RigidBody objects, updating their global rotation matrices ($$\mathbf{A}$$) and velocities ($$\dot{\mathbf{q}}$$).
--   **build_force_vector()** method assembles the unconstrained Right-Hand Side Force vector
+- **unpack_state(Y)** method maps the flat vector $Y$ back into the 3D RigidBody objects, updating their global rotation matrices ($A$), coordinates ($r$) and velocities ($v, \omega$). Quaternions are normalized, $A$ is built, and the broadphase (AABB) contact check is run.
+- **build_force_vector()** method assembles the unconstrained Right-Hand Side Force vector
 
-    $$
-    \mathbf{Q =} \mathbf{Q}_{\mathbf{e}} \mathbf{+} \mathbf{Q}_{\mathbf{v}}
-    $$
+$$
+Q=Q_e+Q_v
+$$
 
 Where
 
-$$\mathbf{Q}_{\mathbf{e}} \mathbf{=} \mathbf{Q}_{\mathbf{e x t e r n a l}}$$ : external Forces, Gravity and Springs.
+$Q_e=Q_{external}$ : external Forces, Gravity and Springs, Contact Forces, user forces at local point $p$: $F$, plus torque $p\times (A^TF)$.
 
-$$\mathbf{Q}_{\mathbf{v}} \mathbf{=} \mathbf{Q}_{\mathbf{v e l o c i t y}}$$ : calculated gyroscopic Coriolis Forces caused by the Bodies rotating: $$\overline{\omega} \times \left( I \overline{\omega} \right)$$.
+$Q_v=Q_{velocity}$ : calculated gyroscopic Coriolis Forces caused by the Bodies rotating:
 
-**3.2 The Jacobian Assembly (**$$\mathbf{\Phi}_{\mathbf{q}}$$ **and** $$\mathbf{\gamma}^{\mathbf{*}}$$**)**
+$$
+Q_v=-\omega \times (J\omega)
+$$
+
+**3.2 Constraints and The Jacobian Assembly (**$\Phi_q$ **and** $\gamma^{*}$**)**
+
+The rows are stacked in the order: joints, then gears, then motions.
 
 Iteration through all Joints and evaluation the kinematics to build:
 
--   $$\mathbf{\Phi}_{\mathbf{q}}$$ **(The Jacobian):** The matrix of spatial directions that degrees of freedom are restricted in.
--   $$\mathbf{\gamma}^{\mathbf{*}}$$ **(The Right-Hand Side Accelerations):** Contains the centripetal and Coriolis accelerations of the joints ($$\gamma$$), adjusted by the **Baumgarte Stabilization** terms ($$- 2 \alpha \dot{\Phi} - \beta^{2}$$) to prevent joints from drifting apart.
+- $\Phi_q$ **(The Jacobian):** The matrix of spatial directions that degrees of freedom are restricted in.
+- $\gamma^{*}$ **(The Right-Hand Side Accelerations):** Contains the centripetal and Coriolis accelerations of the joints ($\gamma$), adjusted by the **Baumgarte Stabilization** terms ($-2\alpha \dot{\Phi}-\beta^2$) to prevent joints from drifting apart.
 
 **Step 4: Solving the DAE (The Schur Complement)**
 
-With $$M , Q , \Phi_{q} ,$$ and $$\gamma^{*}$$ assembled, the system forms the classic **KKT (Karush-Kuhn-Tucker)** augmented matrix:
+With $M,Q,\Phi_q,$ and $\gamma^{*}$ assembled, the system forms the classic **KKT (Karush-Kuhn-Tucker)** augmented matrix:
 
 $$
-\begin{bmatrix}M & \Phi_{q}^{T} \\ \Phi_{q} & 0\end{bmatrix} \begin{bmatrix}\ddot{q} \\ \lambda\end{bmatrix} = \begin{bmatrix}Q \\ \gamma^{*}\end{bmatrix}
+\left[\begin{matrix}M & \Phi_q^T \\ \Phi_q & 0\end{matrix}\right] \left[\begin{matrix}\dot{\nu} \\ \lambda\end{matrix}\right] =\left[\begin{matrix}Q \\ \gamma^{*}\end{matrix}\right]
 $$
 
-which is solved for Lagrange Multipliers $$\mathbf{\lambda}$$ and accelerations $$\ddot{\mathbf{q}}$$ using highly optimized **Schur Complement** method.
+which is solved for Lagrange Multipliers $\lambda$ and accelerations $\dot{\nu}$ using highly optimized **Schur Complement** method.
 
 **Step 5: Returning to the Integrator**
 
-The Bodies velocities ($$\dot{\mathbf{q}}$$) and the newly calculated accelerations ($$\ddot{\mathbf{q}}$$) return to the **Integrator** (selected by user), which steps the system forward in time. Then the cycle repeats from Step 3 until the simulation finishes.
+The evaluator returns $\dot{Y}$ (the Bodies velocities ($\dot{q}$) and the newly calculated accelerations ($\dot{\nu}$)) to the **Integrator** (selected by user), which steps the system forward in time. Then the cycle repeats from Step 3 until the simulation finishes.
 
 ### Schur Complement method (solving the KKT)
 
-The Schur Complement is used instead of a standard matrix solver (e.g. Gaussian Elimination). Mathematical derivation and the structural advantages of the Schur Complement method.
+The Schur Complement is used instead of a standard matrix solver (e.g. Gaussian Elimination). 
 
-**The Mathematics of the Schur Complement**
+**Mathematical derivation and the structural advantages of the Schur Complement method**
 
 In multibody dynamics, the physical system is defined by a system of Differential Algebraic Equations (DAEs). When expressed in matrix form, it creates the classic KKT (Karush-Kuhn-Tucker) augmented matrix:
 
 $$
-\begin{bmatrix}M & \Phi_{q}^{T} \\ \Phi_{q} & 0\end{bmatrix} \begin{bmatrix}\ddot{q} \\ \lambda\end{bmatrix} = \begin{bmatrix}Q \\ \gamma^{*}\end{bmatrix}
+\left[\begin{matrix}M & \Phi_q^T \\ \Phi_q & 0\end{matrix}\right] \left[\begin{matrix}\dot{\nu} \\ \lambda\end{matrix}\right] =\left[\begin{matrix}Q \\ \gamma^{*}\end{matrix}\right]
 $$
 
 Where:
 
-$$\mathbf{M}$$: The Mass/Inertia matrix (size $$n \  \times n$$).
+$M$: The Mass/Inertia matrix (size $n \times n$).
 
-$$\mathbf{\Phi}_{\mathbf{q}}$$: The Constraint Jacobian matrix (size $$m \  \times n$$).
+$\Phi_q$: The Constraint Jacobian matrix (size $m \times n$).
 
-$$\ddot{\mathbf{q}}$$: The unknown system accelerations (size $$n \  \times 1$$).
+$\dot{\nu}$: The unknown system accelerations (size $n \times 1$).
 
-$$\mathbf{\lambda}$$: The unknown constraint reaction forces (size $$m \  \times 1$$).
+$\lambda$: The unknown constraint reaction forces (size $m \times 1$).
 
-$$\mathbf{Q}$$: The known external forces and torques.
+$Q$: The known external forces and torques.
 
-$$\mathbf{\gamma}^{\mathbf{*}}$$: The known right-hand side kinematic accelerations ($$\gamma$$) with Baumgarte Stabilization:
+$\gamma^{*}$: The known right-hand side kinematic accelerations ($\gamma$) with Baumgarte Stabilization:
 
 $$
-\gamma^{*} = \gamma - 2 \alpha \dot{\Phi} - \beta^{2}
+\gamma^{*}=\gamma -2\alpha \dot{\Phi}-\beta^2
 $$
 
-$$n$$ is the number of degrees of freedom (DOFs) and $$m$$ is the number of constraints.
+$n$ is the number of degrees of freedom (DOFs) and $m$ is the number of constraints.
 
 **The Derivation**
 
 If we unpack the matrix into two separate equations, we get:
 
-1.  The Dynamics Equation **:** $$M \ddot{q} + \Phi_{q}^{T} \lambda = Q$$
-2.  The Kinematic Equation **:** $$\Phi_{q} \ddot{q} = \gamma^{*}$$
+1. The Dynamics Equation: $M\dot{\nu}+\Phi_q^T\lambda =Q$
+2. The Kinematic Equation: $\Phi_q\dot{\nu}=\gamma^{*}$
 
-The Schur Complement method solves this by algebraic substitution. First, we isolate the accelerations ($$\ddot{\mathbf{q}}$$) in Equation 1 by multiplying by the inverse of the mass matrix ($$\mathbf{M}^{\mathbf{- 1}}$$):
-
-$$
-\ddot{q} = M^{- 1} \left( Q - \Phi_{q}^{T} \lambda \right)
-$$
-
-Next, we substitute this expression for $$\ddot{q}$$ directly into Equation 2:
+The Schur Complement method solves this by algebraic substitution. First, we isolate the accelerations ($\dot{\nu}$) in Equation 1 by multiplying by the inverse of the mass matrix ($M^{-1}$):
 
 $$
-\Phi_{q} \left( M^{- 1} \left( Q - \Phi_{q}^{T} \lambda \right) \right) = \gamma^{*}
+\dot{\nu}=M^{-1}\left(Q-\Phi_q^T\lambda\right)
 $$
 
-Now, we distribute $$\Phi_{q}$$ and rearrange the equation to isolate the unknown reaction forces ($$\lambda$$) on the left side:
+Next, we substitute this expression for $\dot{\nu}$ directly into Equation 2:
 
 $$
-\left( \Phi_{q} M^{- 1} \Phi_{q}^{T} \right) \lambda = \Phi_{q} M^{- 1} Q - \gamma^{*}
+\Phi_q\left(M^{-1}\left(Q-\Phi_q^T\lambda\right)\right) =\gamma^{*}
 $$
 
-We have now condensed the system into a single linear equation: $$C \lambda = \text{RHS}$$
+Now, we distribute $\Phi_q$ and rearrange the equation to isolate the unknown reaction forces ($\lambda$) on the left side:
+
+$$
+\left(\Phi_qM^{-1}\Phi_q^T\right) \lambda =\Phi_qM^{-1}Q-\gamma^{*}
+$$
+
+We have now condensed the system into a single linear equation: $C\lambda =\text{RHS}$
 
 Where:
 
--   $$C = \Phi_{q} M^{- 1} \Phi_{q}^{T}$$ is the **Schur Complement Matrix** (sometimes called the lead or mass-orthogonalized Jacobian matrix).
--   $$\text{RHS} = \Phi_{q} M^{- 1} Q - \gamma^{*}$$ is the known right-hand side vector.
+- $C=\Phi_qM^{-1}\Phi_q^T$ is the **Schur Complement Matrix** (sometimes called the lead or mass-orthogonalized Jacobian matrix).
+- $\text{RHS}=\Phi_qM^{-1}Q-\gamma^{*}$ is the known right-hand side vector.
 
-Once we solve $$C \lambda = \text{RHS}$$ for the Lagrange multipliers ($$\lambda$$), we substitute them back into the dynamics equation to effortlessly calculate the final accelerations ($$\ddot{q}$$).
+Once we solve $C\lambda =\text{RHS}$ for the Lagrange multipliers ($\lambda$), we substitute them back into the dynamics equation to effortlessly calculate the final accelerations ($\dot{\nu}$).
+
+The mass matrix $M$ is diagonal and constant, so $M^{-1}$ is applied as elementwise division by its stored diagonal, with no matrix inverse and no factorization. The kernel forms $C$ ($m\times m$) and solves it once per evaluation. Because $m\ll 6N+m$, this is much cheaper than solving the full KKT matrix.
 
 ### Tikhonov Regularization Solution
 
-When a kinematic chain forms a closed loop (like a four-bar linkage) or when multiple joints restrict the same degree of freedom, the constraint Jacobian matrix ($$\Phi_{q}$$) loses row rank. Without regularization, the Schur complement matrix ($$C$$) becomes singular, the determinant hits zero, and the Solver immediately crashes with a Singular Matrix exception.
+When a kinematic chain forms a closed loop (like a four-bar linkage) or when multiple joints restrict the same degree of freedom, the constraint Jacobian matrix ($\Phi_q$) loses row rank. Without regularization, the Schur complement matrix ($C$) becomes singular, the determinant hits zero, and the Solver immediately crashes with a Singular Matrix exception.
 
-Using **Tikhonov Regularization** instead of making the constraints infinitely rigid, it injects a microscopic amount of "compliance" (elasticity) directly into the matrix diagonal. This fixes the singular matrix instantly without changing the matrix size. We replace the bottom-right 0 block with $$- \epsilon I$$, then the system becomes:
+Using **Tikhonov Regularization** instead of making the constraints infinitely rigid, it injects a microscopic amount of "compliance" (elasticity) directly into the matrix diagonal. This fixes the singular matrix instantly without changing the matrix size. We replace the bottom-right 0 block with $-\epsilon I$, then the system becomes:
 
 $$
-\begin{bmatrix}\mathbf{M} & \mathbf{\Phi}_{\mathbf{q}}^{\mathbf{T}} \\ \mathbf{\Phi}_{\mathbf{q}} & \mathbf{- \epsilon I}\end{bmatrix} \begin{bmatrix}\ddot{\mathbf{q}} \\ \mathbf{\lambda}\end{bmatrix} \mathbf{=} \begin{bmatrix}\mathbf{Q} \\ \mathbf{\gamma}^{\mathbf{*}}\end{bmatrix}
+\left[\begin{matrix}M & \Phi_q^T \\ \Phi_q & -\epsilon I\end{matrix}\right] \left[\begin{matrix}\dot{\nu} \\ \lambda\end{matrix}\right] =\left[\begin{matrix}Q \\ \gamma^{*}\end{matrix}\right]
 $$
 
 Where:
 
-$$\epsilon$$ is the value (for example: -1E-7) physically represents an Artificial Inverse Mass with units of $$kg^{-1}$$ (or Inverse Inertia $$1/kgm^2$$ for rotation),
+$\epsilon$ is the value (for example: -1E-7) physically represents an Artificial Inverse Mass with units of $kg^{-1}$ (or Inverse Inertia $1/kgm^2$ for rotation part).
 
-$$I = \begin{bmatrix}1 & \cdots & 0 \\ \vdots & 1 & \vdots \\ 0 & \cdots & 1\end{bmatrix}$$ is the Identity matrix.
+$I=\left[\begin{matrix}1 & \cdots & 0 \\ \vdots & 1 & \vdots \\ 0 & \cdots & 1\end{matrix}\right]$ is the Identity matrix.
 
-When we perform the block matrix elimination to build the **Schur Complement** ($$C$$) that we use to solve for the Lagrange multipliers ($$\lambda$$), the equation transforms from $$C = \Phi_{q} M^{- 1} \Phi_{q}^{T}$$ into:
+When we perform the block matrix elimination to build the **Schur Complement** ($C$) that we use to solve for the Lagrange multipliers ($\lambda$), the equation transforms from $C=\Phi_qM^{-1}\Phi_q^T$ into:
 
 $$
-C_{r e g} = \Phi_{q} M^{- 1} \Phi_{q}^{T} + \epsilon I
+C_{reg}=\Phi_qM^{-1}\Phi_q^T+\epsilon I
 $$
 
-By simply adding $$\epsilon$$ to the main diagonal of the $$C$$ matrix, we guarantee that all eigenvalues are strictly greater than zero, the matrix becomes unconditionally positive-definite and impossible to crash.
+By simply adding $\epsilon$ to the main diagonal of the $C$ matrix, we guarantee that all eigenvalues are strictly greater than zero, the matrix becomes unconditionally positive-definite and impossible to crash.
 
-**The Schur Complement approach provides the massive advantages** over Standard Gaussian Elimination. The full KKT matrix has a dimension of $$( n + m ) \times ( n + m )$$, where $$n$$ is the number of degrees of freedom (DOFs) and $$m$$ is the number of constraints. By using the Schur Complement, we reduce the unknown matrix from size $$( n + m ) \times ( n + m )$$ down to just $$m \  \times m$$. Because $$M$$ is constant in local frames, its inverse ($$M^{- 1}$$) is pre-calculated or pre-factorized once. Solving a small $$m \  \times m$$ matrix every frame is drastically faster than solving the giant KKT matrix by Standard Gaussian Elimination.
+**The Schur Complement approach provides the massive advantages** over Standard Gaussian Elimination. The full KKT matrix has a dimension of $\left(n+m\right) \times \left(n+m\right)$, where $n$ is the number of degrees of freedom (DOFs) and $m$ is the number of constraints. By using the Schur Complement, we reduce the unknown matrix from size $\left(n+m\right) \times \left(n+m\right)$ down to just $m \times m$. Because $M$ is constant in local frames, its inverse ($M^{-1}$) is pre-calculated or pre-factorized once. Solving a small $m \times m$ matrix every frame is drastically faster than solving the giant KKT matrix by Standard Gaussian Elimination.
 
 ## Kinematic Constraints (Joints) and Jacobian Matrices
 

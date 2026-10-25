@@ -109,6 +109,12 @@ The reference frame is locked if one of the following features are defined relat
 
 We can move and rotate the body with its CoG RF if we check the “Move Body with CoG” checkbox.
 
+### Reference Frame Selection
+
+Reference Frame can be selected in the Tree hierarchy and in the Viewport.
+Press and hold Shift, then use the left mouse button to select a Reference Frame in the Viewport. Repeated Shift+clicks cycle through overlapping Reference Frames, and the cursor turns into the pointing hand while Shift is held.
+
+
 ## Primitives
 
 Primitives Toolbar is for creating the simple solid models.

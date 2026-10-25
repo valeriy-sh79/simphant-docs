@@ -303,11 +303,24 @@ The Contact is defined by the following parameters:
 
 ### Contact processing methods
 
-For the efficient contact processing, the collision detection method passes through three distinct phases:
+For the efficient contact processing, the collision detection method passes through the following distinct phases:
 
-1.  Broad Phase: filters bodies using dynamic Axis-Aligned Bounding Boxes (AABBs). At the start of a solver step, it just checks if the maximum and minimum XYZ coordinates of these boxes overlap.
-2.  Narrow Phase: calculates exact vertex-to-mesh proximity, extracting the contact manifold which contains penetration depth (δ), normal vector to the contact surface, and contact point (P_c) where in global space the bodies touch.
-3.  Penalty Force Injection: calculates the Hertzian contact force (F) and directly injects it into the global Force Vector (Q) of the KKT-matrix.
+#### Broad Phase
+
+Solver filters bodies using dynamic Axis-Aligned Bounding Boxes (AABBs). At the start of a solver step, it just checks if the maximum and minimum XYZ coordinates of these boxes overlap.
+
+#### Narrow Phase: How the contact is calculated
+
+1. **Find the overlapping space.** SimPhant finds the space occupied by both bodies at the same time. If there is no overlap, there is no contact force from this model.
+2. **Separate the contact regions.** Each separate piece of overlapping space becomes one contact region. For example, a ball pressing against a flat floor normally creates one region. A ball touching both sides of a V-shaped groove can create two separate regions, one on each side.
+3. **Choose the push direction.** SimPhant examines the surface pieces belonging to each body within a region. It combines their directions to find an overall direction for the separating force. Larger surface pieces have more influence. (Simply splitting a surface into more triangles does not give it more influence.)
+4. **Measure the contact depth ($δ$).** Imagine drawing straight lines through the region along the push direction. SimPhant measures the overlap between the two surfaces along these lines and uses the largest measured distance as the contact depth. 
+5. **Choose where the force acts: contact point ($P_c$).** Both bodies receive their contact force at this same point: the balance point (CoG) of the overlapping volume.
+6. **Calculate one contact force for the region ($F$).** Solver calculates the Hertzian contact force ($F$) and directly injects it into the global Force Vector ($Q$) of the KKT-matrix. The force includes the spring effect, damping, and friction when enabled. The two bodies receive forces of equal size in opposite directions.
+
+![](media/20261025_Contact_Definition.png)
+
+### Mesh quality/density of the contacted Bodies
 
 The following four methods are available and can be specified in the contact settings, depending on the contact characteristics of the interacting bodies:
 
@@ -393,25 +406,6 @@ Below is the graph example representing the sliding friction coefficient $$\mu =
 ![](media/f74f3fef3d191fc5b66717e6da336f4f.png)
 
 Note: as is evident from the definition, when the relative sliding velocity is 0, the static friction (Stiction) is not calculated in this model. The friction force appears as the sliding friction once the relative motion between the contacted bodies along the contact plane is detected.
-
-### Advanced collision settings
-
-Two optimization options are available in the program:
- 
-![](media/20261002_advanced_collision_settings.png)
-
-#### 1) One-sided penetrator selection (smaller mesh as penetrator only)
-Enabled: solver checks both bodies of a contact pair as the penetrator. Keep this option enabled for correct detection.
-
-Disabled: solver checks smaller body of a contact pair as the penetrator. Disabling is an experimental speed-up, but it can miss contacts on some geometries. 
-
-#### 2) Conservative candidate-vertex reduction
-Merges duplicate nearby contact points before the proximity check to speed up dense contact patches. Safe to leave enabled.
-Disable only to debug or inspect raw contact candidates, solver speed is reduced in this case. 
-
-How does this work: two parameters control which vertices reach the expensive nearest-surface query in the solver. They do not change the collision mesh itself.
-1.	contact_candidate_reduction_threshold = 96: Reduction is attempted only when more than 96 vertices from one penetrator have passed the overlap-box filter. With 96 or fewer, every candidate goes directly to the nearest-surface query. This avoids paying for voxel sorting when the batch is already small.
-2.	contact_candidate_voxel_size_m = 1e-3: The target-local candidate positions are divided into cubic cells with sides of 0.001 m (1 mm). When multiple vertices fall in the same cell, only one of those vertices is sent to the nearest-surface query. This is done separately for each direction of the two-sided contact search in the solver.
 
 ### Collision post-processing
 
