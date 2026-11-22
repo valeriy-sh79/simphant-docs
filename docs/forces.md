@@ -107,7 +107,7 @@ The path to the spline data file is saved in the force/torque formula bar as fol
 
 ![](media/20260926_spline_window.png)
 
-Once the data file is loaded, the interpolator object is prepared (scipy.interpolate.Akima1DInterpolator), so the solver evaluates that interpolator directly at whatever time it needs.
+Once the data file is loaded, the interpolator object is prepared (scipy.interpolate.Akima1DInterpolator), so the solver evaluates that interpolator directly at whatever time it needs. The data/CSV files are saved in the MBD project files with the model.
 
 **Following rules are considered for the spline creation:**
 
@@ -270,17 +270,21 @@ where
 
 $$k$$ is the contact stiffness,
 
-$$\delta$$ is the penetration depth of two bodies,
+for each contact region, the effective damping coefficient increases **linearly with penetration**, from 0 up to the user defined damping $C$:
 
-$$C_{eff}$$ is damping defined as following:
+$$
+C_{\mathrm{eff}}=
+\begin{cases}
+C\min\left(\dfrac{\delta}{\delta_{\max}},\,1\right), & \delta_{\max}>0,\\
+C, & \delta_{\max}\leq0.
+\end{cases}
+$$
 
-$$C_{eff}=C \cdot min⁡(\delta,\delta_{max})/\delta_{max}$$
-
-$$C_{eff}$$ ramps from 0 at 0 depth to C at max penetration depth,
+here $\delta$ is the penetration depth of two bodies, and $\delta_{\max}$ is the depth at which full damping is reached. For example, at $\delta=0.5\delta_{\max}$,  the effective damping is $0.5C$.
 
 $$C$$ is user defined damping coefficient,
 
-$$\delta_{max}$$ is the depth of penetration at which the damping coefficient linearly increases to a user-specified value (C),
+$$\delta_{max}$$ is the depth of penetration at which the damping coefficient linearly increases to a user-specified value $C$,
 
 $$v_{n}$$ is the relative velocity of the bodies at the contact point,
 
@@ -300,6 +304,14 @@ The Contact is defined by the following parameters:
 -   Force exponent depends on the contact pattern on the Hertzian contact model,
 -   Penetration depth (max) $$\delta_{max}$$: is the depth of penetration at which the damping coefficient increases to a user-specified value (C),
 -   Four Contact processing methods are available in the dropdown menu.
+
+#### What the contact settings mean
+
+- **Stiffness** controls how strongly the invisible spring pushes back. Greater overlap produces a stronger spring force. The force exponent controls how quickly that force grows with depth.
+- **Damping** resists the relative approach or separation of the surfaces and can reduce bouncing. It switches on gradually as overlap increases, reaching its full coefficient at the depth set by `d_max`. The separating part of the contact force is never allowed to pull the bodies together.
+- **Friction**, when enabled, opposes sliding along the contacting surfaces.
+
+Stiffness and damping apply **once to each contact region**, not once to every triangle or mesh vertex. Adding more triangles to an unchanged surface therefore does not add more contact springs. Changing the actual shape of the surface can still change the result.
 
 ### Contact processing methods
 
@@ -321,6 +333,8 @@ Solver filters bodies using dynamic Axis-Aligned Bounding Boxes (AABBs). At the 
 ![](media/20261025_Contact_Definition.png)
 
 ### Mesh quality/density of the contacted Bodies
+
+Selected collision meshes must be valid, closed, consistently oriented solids. Invalid geometry and failed Boolean operations raise errors instead of silently dropping forces or reverting to vertex forces.
 
 The following four methods are available and can be specified in the contact settings, depending on the contact characteristics of the interacting bodies:
 
@@ -410,4 +424,3 @@ Note: as is evident from the definition, when the relative sliding velocity is 0
 ### Collision post-processing
 
 Collision post-processing is time-consuming and is triggered only when the user opens the Telemetry or exports data to CSV format.
-

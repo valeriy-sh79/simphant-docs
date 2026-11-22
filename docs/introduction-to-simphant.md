@@ -11,7 +11,7 @@ hide_title: true
   <img src={require('./media/ac0ae53e13223a52af6acb61ab1997a9.png').default} alt="SimPhant" width="250" height="200" style={{ objectFit: 'contain', margin: '1.5rem auto', border: 'none', boxShadow: 'none' }} />
 </div>
 
-Welcome to the official documentation for SimPhant™, an advanced Multibody Dynamics (MBD) Physics Engine and Simulation environment!
+Welcome to the official documentation for SimPhant® , an advanced Multibody Dynamics (MBD) Physics Engine and Simulation environment!
 
 SimPhant is high-precision software for rigorous analytical mechanical modeling, developed to bring your ideas and inventions to life through in-depth analysis of rigid-body systems.
 

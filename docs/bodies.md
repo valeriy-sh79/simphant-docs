@@ -21,9 +21,17 @@ The program supports a direct import of URDF files (Unified Robot Description Fo
 
 The URDF-file shall have the `meshes` folder including the CAD models (STL files) of all parts listed in the related URDF file. The robot components (links) are connected by the related joints according to the URDF file structure after the import, so the robot is immediately ready for the simulation.
 
-Various URDF models of the robots and robotic mechanisms are available on GitHub. 
-
 ![](media/20261017_URDF_import_example.png)
+
+The **Robotics & Inverse Kinematics Workbench** provides a complete kinematic and inverse-dynamics workflow for articulated mechanisms:
+
+The details are described in the [Robotics](robotics.md) section.
+
+Various URDF models of the robots and robotic mechanisms are available on GitHub:
+
+https://github.com/unitreerobotics/unitree_ros
+
+https://github.com/Daniella1/urdf_files_dataset
 
 ## Rigid Body Properties
 

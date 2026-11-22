@@ -24,6 +24,7 @@ const sidebars = {
     'springs-and-bushings',
     'gears-and-gear-constraints',
     'motion',
+    'robotics',
     'simulation',
     'mathematical-foundations',
   ],

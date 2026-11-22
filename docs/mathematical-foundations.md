@@ -298,7 +298,7 @@ The rows are stacked in the order: joints, then gears, then motions.
 Iteration through all Joints and evaluation the kinematics to build:
 
 - $\Phi_q$ **(The Jacobian):** The matrix of spatial directions that degrees of freedom are restricted in.
-- $\gamma^{*}$ **(The Right-Hand Side Accelerations):** Contains the centripetal and Coriolis accelerations of the joints ($\gamma$), adjusted by the **Baumgarte Stabilization** terms ($-2\alpha \dot{\Phi}-\beta^2$) to prevent joints from drifting apart.
+- $\gamma^{*}$ **(The Right-Hand Side Accelerations):** Contains the centripetal and Coriolis accelerations of the joints ($\gamma$), adjusted by the **Baumgarte Stabilization** terms ($-2\alpha \dot{\Phi}-\beta^{2} \Phi$) to prevent joints from drifting apart.
 
 **Step 4: Solving the DAE (The Schur Complement)**
 
@@ -341,7 +341,7 @@ $Q$: The known external forces and torques.
 $\gamma^{*}$: The known right-hand side kinematic accelerations ($\gamma$) with Baumgarte Stabilization:
 
 $$
-\gamma^{*}=\gamma -2\alpha \dot{\Phi}-\beta^2
+\gamma^{*}=\gamma -2\alpha \dot{\Phi}-\beta^{2} \Phi
 $$
 
 $n$ is the number of degrees of freedom (DOFs) and $m$ is the number of constraints.
@@ -918,7 +918,7 @@ The numerical integration causes a tiny rounding errors. As a result, over time,
 We replace the standard $$\gamma$$ with a stabilized $$\gamma^{*}$$ in the augmented matrix for all Joints:
 
 $$
-\gamma^{*} = \gamma - 2 \alpha \dot{\Phi} - \beta^{2}
+\gamma^{*} = \gamma - 2 \alpha \dot{\Phi} - \beta^{2} \Phi
 $$
 
 Where:

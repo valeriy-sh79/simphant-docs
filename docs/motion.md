@@ -127,7 +127,7 @@ The path to the spline data file is saved in the Motion (Force/torque) formula b
 
 ![](media/20260926_spline_window.png)
 
-Once the data file is loaded, the interpolator object is prepared (scipy.interpolate.Akima1DInterpolator), so the solver evaluates that interpolator directly at whatever time it needs.
+Once the data file is loaded, the interpolator object is prepared (scipy.interpolate.Akima1DInterpolator), so the solver evaluates that interpolator directly at whatever time it needs. The data/CSV files are saved in the MBD project files with the model.
 
 **Following rules are considered for the spline creation:**
 
